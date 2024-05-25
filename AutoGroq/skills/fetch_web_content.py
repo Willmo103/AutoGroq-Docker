@@ -1,8 +1,10 @@
 from typing import Optional
 import requests
 import collections
+
 collections.Callable = collections.abc.Callable
 from bs4 import BeautifulSoup
+
 
 def fetch_web_content(url: str) -> Optional[str]:
     """

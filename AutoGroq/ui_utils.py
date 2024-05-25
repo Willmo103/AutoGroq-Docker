@@ -8,19 +8,24 @@ from config import API_URL, LLM_PROVIDER, MAX_RETRIES, MODEL_TOKEN_LIMITS, RETRY
 from current_project import Current_Project
 
 from skills.fetch_web_content import fetch_web_content
-    
-    
+
+
 def display_api_key_input():
-    if 'api_key' not in st.session_state:
-        st.session_state.api_key = ''
+    if "api_key" not in st.session_state:
+        st.session_state.api_key = ""
     llm = LLM_PROVIDER.upper()
-    api_key = st.text_input(f"Enter your {llm}_API_KEY:", type="password", value=st.session_state.api_key, key="api_key_input")
-    
+    api_key = st.text_input(
+        f"Enter your {llm}_API_KEY:",
+        type="password",
+        value=st.session_state.api_key,
+        key="api_key_input",
+    )
+
     if api_key:
         st.session_state.api_key = api_key
         st.success("API key entered successfully.")
         print(f"API Key: {api_key}")
-    
+
     return api_key
 
 
@@ -36,8 +41,9 @@ from file_utils import create_agent_data, create_skill_data, sanitize_text
 
 import datetime
 
+
 def create_project_manager(rephrased_text, api_url):
-    temperature_value = st.session_state.get('temperature', 0.1)
+    temperature_value = st.session_state.get("temperature", 0.1)
     llm_request_data = {
         "model": st.session_state.model,
         "temperature": temperature_value,
@@ -61,25 +67,25 @@ def create_project_manager(rephrased_text, api_url):
 
                 Team of Experts:
                 [Description of the ideal team of experts]
-                """
+                """,
             }
-        ]
+        ],
     }
 
     llm_provider = get_llm_provider(api_url)
     response = llm_provider.send_request(llm_request_data)
-    
+
     if response.status_code == 200:
         response_data = llm_provider.process_response(response)
         if "choices" in response_data and response_data["choices"]:
             content = response_data["choices"][0]["message"]["content"]
             return content.strip()
-    
+
     return None
 
 
 def create_zip_file(zip_buffer, file_data):
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for file_name, file_content in file_data.items():
             zip_file.writestr(file_name, file_content)
 
@@ -87,17 +93,36 @@ def create_zip_file(zip_buffer, file_data):
 def display_discussion_and_whiteboard():
     discussion_history = get_discussion_history()
 
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Most Recent Comment", "Whiteboard", "Discussion History", "Objectives", "Deliverables", "Goal"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+        [
+            "Most Recent Comment",
+            "Whiteboard",
+            "Discussion History",
+            "Objectives",
+            "Deliverables",
+            "Goal",
+        ]
+    )
 
     with tab1:
         if "last_comment" not in st.session_state:
             st.session_state.last_comment = ""
-        st.text_area("Most Recent Comment", value=st.session_state.last_comment, height=400, key="discussion")
+        st.text_area(
+            "Most Recent Comment",
+            value=st.session_state.last_comment,
+            height=400,
+            key="discussion",
+        )
 
     with tab2:
         if "whiteboard" not in st.session_state:
             st.session_state.whiteboard = ""
-        st.text_area("Whiteboard", value=st.session_state.whiteboard, height=400, key="whiteboard")
+        st.text_area(
+            "Whiteboard",
+            value=st.session_state.whiteboard,
+            height=400,
+            key="whiteboard",
+        )
 
     with tab3:
         st.write(discussion_history)
@@ -106,9 +131,13 @@ def display_discussion_and_whiteboard():
         if "current_project" in st.session_state:
             current_project = st.session_state.current_project
             for index, objective in enumerate(current_project.objectives):
-                if objective["text"].strip():  # Check if the objective text is not empty
+                if objective[
+                    "text"
+                ].strip():  # Check if the objective text is not empty
                     checkbox_key = f"objective_{index}"
-                    done = st.checkbox(objective["text"], value=objective["done"], key=checkbox_key)
+                    done = st.checkbox(
+                        objective["text"], value=objective["done"], key=checkbox_key
+                    )
                     if done != objective["done"]:
                         if done:
                             current_project.mark_objective_done(index)
@@ -121,22 +150,33 @@ def display_discussion_and_whiteboard():
         if "current_project" in st.session_state:
             current_project = st.session_state.current_project
             for index, deliverable in enumerate(current_project.deliverables):
-                if deliverable["text"].strip():  # Check if the deliverable text is not empty
+                if deliverable[
+                    "text"
+                ].strip():  # Check if the deliverable text is not empty
                     checkbox_key = f"deliverable_{index}"
-                    done = st.checkbox(deliverable["text"], value=deliverable["done"], key=checkbox_key)
+                    done = st.checkbox(
+                        deliverable["text"], value=deliverable["done"], key=checkbox_key
+                    )
                     if done != deliverable["done"]:
                         if done:
                             current_project.mark_deliverable_done(index)
                         else:
                             current_project.mark_deliverable_undone(index)
-    
-    with tab6:
-        rephrased_request = st.text_area("Re-engineered Prompt:", value=st.session_state.get('rephrased_request', ''), height=100, key="rephrased_request_area")
 
+    with tab6:
+        rephrased_request = st.text_area(
+            "Re-engineered Prompt:",
+            value=st.session_state.get("rephrased_request", ""),
+            height=100,
+            key="rephrased_request_area",
+        )
 
 
 def display_download_button():
-    if "autogen_zip_buffer" in st.session_state and "crewai_zip_buffer" in st.session_state:
+    if (
+        "autogen_zip_buffer" in st.session_state
+        and "crewai_zip_buffer" in st.session_state
+    ):
         col1, col2 = st.columns(2)
         with col1:
             st.download_button(
@@ -144,7 +184,7 @@ def display_download_button():
                 data=st.session_state.autogen_zip_buffer,
                 file_name="autogen_files.zip",
                 mime="application/zip",
-                key=f"autogen_download_button_{int(time.time())}"  # Generate a unique key based on timestamp
+                key=f"autogen_download_button_{int(time.time())}",  # Generate a unique key based on timestamp
             )
         with col2:
             st.download_button(
@@ -152,7 +192,7 @@ def display_download_button():
                 data=st.session_state.crewai_zip_buffer,
                 file_name="crewai_files.zip",
                 mime="application/zip",
-                key=f"crewai_download_button_{int(time.time())}"  # Generate a unique key based on timestamp
+                key=f"crewai_download_button_{int(time.time())}",  # Generate a unique key based on timestamp
             )
     else:
         st.warning("No files available for download.")
@@ -163,11 +203,16 @@ def display_user_input():
     reference_url = st.text_input("URL:", key="reference_url")
 
     if user_input:
-        url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+        url_pattern = re.compile(
+            r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+        )
         url_match = url_pattern.search(user_input)
         if url_match:
             url = url_match.group()
-            if "reference_html" not in st.session_state or url not in st.session_state.reference_html:
+            if (
+                "reference_html" not in st.session_state
+                or url not in st.session_state.reference_html
+            ):
                 html_content = fetch_web_content(url)
                 if html_content:
                     if "reference_html" not in st.session_state:
@@ -186,15 +231,25 @@ def display_user_input():
 
 
 def display_reset_and_upload_buttons():
-    col1, col2 = st.columns(2)  
+    col1, col2 = st.columns(2)
     with col1:
         if st.button("Reset", key="reset_button"):
             # Define the keys of session state variables to clear
             keys_to_reset = [
-                "rephrased_request", "discussion", "whiteboard", "user_request",
-                "user_input", "agents", "zip_buffer", "crewai_zip_buffer",
-                "autogen_zip_buffer", "uploaded_file_content", "discussion_history",
-                "last_comment", "user_api_key", "reference_url"
+                "rephrased_request",
+                "discussion",
+                "whiteboard",
+                "user_request",
+                "user_input",
+                "agents",
+                "zip_buffer",
+                "crewai_zip_buffer",
+                "autogen_zip_buffer",
+                "uploaded_file_content",
+                "discussion_history",
+                "last_comment",
+                "user_api_key",
+                "reference_url",
             ]
             # Reset each specified key
             for key in keys_to_reset:
@@ -204,31 +259,37 @@ def display_reset_and_upload_buttons():
             st.session_state.user_input = ""
             st.session_state.show_begin_button = True
             st.experimental_rerun()
-    
+
     with col2:
-        uploaded_file = st.file_uploader("Upload a sample .csv of your data (optional)", type="csv")
-        
+        uploaded_file = st.file_uploader(
+            "Upload a sample .csv of your data (optional)", type="csv"
+        )
+
         if uploaded_file is not None:
             try:
                 # Attempt to read the uploaded file as a DataFrame
                 df = pd.read_csv(uploaded_file).head(5)
-                
+
                 # Display the DataFrame in the app
                 st.write("Data successfully uploaded and read as DataFrame:")
                 st.dataframe(df)
-                
+
                 # Store the DataFrame in the session state
                 st.session_state.uploaded_data = df
             except Exception as e:
-                st.error(f"Error reading the file: {e}")                
+                st.error(f"Error reading the file: {e}")
 
 
 def display_user_request_input():
     if "show_request_input" not in st.session_state:
         st.session_state.show_request_input = True
     if st.session_state.show_request_input:
-        if st.session_state.get("previous_user_request") != st.session_state.get("user_request", ""):
-            st.session_state.previous_user_request = st.session_state.get("user_request", "")
+        if st.session_state.get("previous_user_request") != st.session_state.get(
+            "user_request", ""
+        ):
+            st.session_state.previous_user_request = st.session_state.get(
+                "user_request", ""
+            )
             if st.session_state.get("user_request", ""):
                 handle_user_request(st.session_state)
             else:
@@ -253,9 +314,9 @@ def extract_code_from_response(response):
     all_code_blocks = code_blocks + html_blocks + js_blocks + css_blocks
     unique_code_blocks = list(set(all_code_blocks))
 
-    return "\n\n".join(unique_code_blocks) 
+    return "\n\n".join(unique_code_blocks)
 
- 
+
 def extract_json_objects(json_string):
     objects = []
     stack = []
@@ -269,7 +330,7 @@ def extract_json_objects(json_string):
             if stack:
                 stack.pop()
                 if not stack:
-                    objects.append(json_string[start_index:i+1])
+                    objects.append(json_string[start_index : i + 1])
     parsed_objects = []
     for obj_str in objects:
         try:
@@ -281,9 +342,11 @@ def extract_json_objects(json_string):
     return parsed_objects
 
 
-def get_agents_from_text(text, api_url, max_retries=MAX_RETRIES, retry_delay=RETRY_DELAY):     
+def get_agents_from_text(
+    text, api_url, max_retries=MAX_RETRIES, retry_delay=RETRY_DELAY
+):
     print("Getting agents from text...")
-    temperature_value = st.session_state.get('temperature', 0.5)
+    temperature_value = st.session_state.get("temperature", 0.5)
     llm_request_data = {
         "model": st.session_state.model,
         "temperature": temperature_value,
@@ -320,13 +383,10 @@ def get_agents_from_text(text, api_url, max_retries=MAX_RETRIES, retry_delay=RET
                     }}
                 ]
                 You will only have been successful if you have returned the results in the above format and followed these guidelines precisely by transcribing the provided text and returning the results in JSON format without any other narrative, commentary, synopsis, or superfluous text of any kind, and taking care to only transcribe the agents from the provided text without creating new agents.
-                """
+                """,
             },
-            {
-                "role": "user",
-                "content": text
-            }
-        ]
+            {"role": "user", "content": text},
+        ],
     }
     llm_provider = get_llm_provider(api_url)
     retry_count = 0
@@ -347,15 +407,15 @@ def get_agents_from_text(text, api_url, max_retries=MAX_RETRIES, retry_delay=RET
                             autogen_agents = []
                             crewai_agents = []
                             for agent_data in json_data:
-                                expert_name = agent_data.get('expert_name', '')
+                                expert_name = agent_data.get("expert_name", "")
                                 if not expert_name:
                                     print("Missing agent name. Retrying...")
                                     retry_count += 1
                                     time.sleep(retry_delay)
                                     continue
-                                description = agent_data.get('description', '')
-                                skills = agent_data.get('skills', [])
-                                tools = agent_data.get('tools', [])
+                                description = agent_data.get("description", "")
+                                skills = agent_data.get("skills", [])
+                                tools = agent_data.get("tools", [])
                                 agent_skills = []
                                 for skill_name in skills:
                                     if skill_name in st.session_state.skill_functions:
@@ -373,20 +433,20 @@ def get_agents_from_text(text, api_url, max_retries=MAX_RETRIES, retry_delay=RET
                                                     "base_url": None,
                                                     "api_type": None,
                                                     "api_version": None,
-                                                    "description": "OpenAI model configuration"
+                                                    "description": "OpenAI model configuration",
                                                 }
                                             ],
                                             "temperature": temperature_value,
                                             "timeout": 600,
-                                            "cache_seed": 42
+                                            "cache_seed": 42,
                                         },
                                         "human_input_mode": "NEVER",
                                         "max_consecutive_auto_reply": 8,
-                                        "system_message": f"You are a helpful assistant that can act as {expert_name} who {description}."
+                                        "system_message": f"You are a helpful assistant that can act as {expert_name} who {description}.",
                                     },
                                     "description": description,
                                     "skills": agent_skills,
-                                    "tools": tools
+                                    "tools": tools,
                                 }
                                 crewai_agent_data = {
                                     "name": expert_name,
@@ -394,7 +454,7 @@ def get_agents_from_text(text, api_url, max_retries=MAX_RETRIES, retry_delay=RET
                                     "skills": agent_skills,
                                     "tools": tools,
                                     "verbose": True,
-                                    "allow_delegation": True
+                                    "allow_delegation": True,
                                 }
                                 autogen_agents.append(autogen_agent_data)
                                 crewai_agents.append(crewai_agent_data)
@@ -412,15 +472,15 @@ def get_agents_from_text(text, api_url, max_retries=MAX_RETRIES, retry_delay=RET
                             autogen_agents = []
                             crewai_agents = []
                             for agent_data in json_data:
-                                expert_name = agent_data.get('expert_name', '')
+                                expert_name = agent_data.get("expert_name", "")
                                 if not expert_name:
                                     print("Missing agent name. Retrying...")
                                     retry_count += 1
                                     time.sleep(retry_delay)
                                     continue
-                                description = agent_data.get('description', '')
-                                skills = agent_data.get('skills', [])
-                                tools = agent_data.get('tools', [])
+                                description = agent_data.get("description", "")
+                                skills = agent_data.get("skills", [])
+                                tools = agent_data.get("tools", [])
                                 agent_skills = []
                                 for skill_name in skills:
                                     if skill_name in st.session_state.skill_functions:
@@ -438,20 +498,20 @@ def get_agents_from_text(text, api_url, max_retries=MAX_RETRIES, retry_delay=RET
                                                     "base_url": None,
                                                     "api_type": None,
                                                     "api_version": None,
-                                                    "description": "OpenAI model configuration"
+                                                    "description": "OpenAI model configuration",
                                                 }
                                             ],
                                             "temperature": temperature_value,
                                             "timeout": 600,
-                                            "cache_seed": 42
+                                            "cache_seed": 42,
                                         },
                                         "human_input_mode": "NEVER",
                                         "max_consecutive_auto_reply": 8,
-                                        "system_message": f"You are a helpful assistant that can act as {expert_name} who {description}."
+                                        "system_message": f"You are a helpful assistant that can act as {expert_name} who {description}.",
                                     },
                                     "description": description,
                                     "skills": agent_skills,
-                                    "tools": tools
+                                    "tools": tools,
                                 }
                                 crewai_agent_data = {
                                     "name": expert_name,
@@ -459,7 +519,7 @@ def get_agents_from_text(text, api_url, max_retries=MAX_RETRIES, retry_delay=RET
                                     "skills": agent_skills,
                                     "tools": tools,
                                     "verbose": True,
-                                    "allow_delegation": True
+                                    "allow_delegation": True,
                                 }
                                 autogen_agents.append(autogen_agent_data)
                                 crewai_agents.append(crewai_agent_data)
@@ -472,12 +532,16 @@ def get_agents_from_text(text, api_url, max_retries=MAX_RETRIES, retry_delay=RET
                 else:
                     print("No agents data found in response")
             else:
-                print(f"API request failed with status code {response.status_code}: {response.text}")
+                print(
+                    f"API request failed with status code {response.status_code}: {response.text}"
+                )
         except Exception as e:
             print(f"Error making API request: {e}")
             retry_count += 1
             time.sleep(retry_delay)
-    print(f"Maximum retries ({max_retries}) exceeded. Failed to retrieve valid agent names.")
+    print(
+        f"Maximum retries ({max_retries}) exceeded. Failed to retrieve valid agent names."
+    )
     return [], []
 
 
@@ -489,7 +553,7 @@ def get_discussion_history():
 
 def get_workflow_from_agents(agents):
     current_timestamp = datetime.datetime.now().isoformat()
-    temperature_value = st.session_state.get('temperature', 0.3)
+    temperature_value = st.session_state.get("temperature", 0.3)
 
     workflow = {
         "name": "AutoGroq Workflow",
@@ -503,16 +567,13 @@ def get_workflow_from_agents(agents):
                 "max_consecutive_auto_reply": 5,
                 "system_message": "You are a helpful assistant.",
                 "is_termination_msg": None,
-                "code_execution_config": {
-                    "work_dir": None,
-                    "use_docker": False
-                },
+                "code_execution_config": {"work_dir": None, "use_docker": False},
                 "default_auto_reply": "",
-                "description": None
+                "description": None,
             },
             "timestamp": current_timestamp,
             "user_id": "default",
-            "skills": []
+            "skills": [],
         },
         "receiver": {
             "type": "groupchat",
@@ -527,14 +588,14 @@ def get_workflow_from_agents(agents):
                             "base_url": None,
                             "api_type": None,
                             "api_version": None,
-                            "description": "OpenAI model configuration"
+                            "description": "OpenAI model configuration",
                         }
                     ],
                     "temperature": temperature_value,
                     "cache_seed": 42,
                     "timeout": 600,
                     "max_tokens": MODEL_TOKEN_LIMITS.get(st.session_state.model, 4096),
-                    "extra_body": None
+                    "extra_body": None,
                 },
                 "human_input_mode": "NEVER",
                 "max_consecutive_auto_reply": 10,
@@ -542,7 +603,7 @@ def get_workflow_from_agents(agents):
                 "is_termination_msg": None,
                 "code_execution_config": None,
                 "default_auto_reply": "",
-                "description": None
+                "description": None,
             },
             "groupchat_config": {
                 "agents": [],
@@ -550,30 +611,37 @@ def get_workflow_from_agents(agents):
                 "messages": [],
                 "max_round": 10,
                 "speaker_selection_method": "auto",
-                "allow_repeat_speaker": True
+                "allow_repeat_speaker": True,
             },
             "timestamp": current_timestamp,
             "user_id": "default",
-            "skills": []
+            "skills": [],
         },
         "type": "groupchat",
         "user_id": "default",
         "timestamp": current_timestamp,
-        "summary_method": "last"
+        "summary_method": "last",
     }
 
     for index, agent in enumerate(agents):
         agent_name = agent["config"]["name"]
         description = agent["description"]
-        formatted_agent_name = sanitize_text(agent_name).lower().replace(' ', '_')
+        formatted_agent_name = sanitize_text(agent_name).lower().replace(" ", "_")
         sanitized_description = sanitize_text(description)
-        
+
         system_message = f"You are a helpful assistant that can act as {agent_name} who {sanitized_description}."
         if index == 0:
-            other_agent_names = [sanitize_text(a['config']['name']).lower().replace(' ', '_') for a in agents[1:] if a in st.session_state.agents]  # Filter out deleted agents
+            other_agent_names = [
+                sanitize_text(a["config"]["name"]).lower().replace(" ", "_")
+                for a in agents[1:]
+                if a in st.session_state.agents
+            ]  # Filter out deleted agents
             system_message += f" You are the primary coordinator who will receive suggestions or advice from all the other agents ({', '.join(other_agent_names)}). You must ensure that the final response integrates the suggestions from other agents or team members. YOUR FINAL RESPONSE MUST OFFER THE COMPLETE RESOLUTION TO THE USER'S REQUEST. When the user's request has been satisfied and all perspectives are integrated, you can respond with TERMINATE."
 
-            other_agent_names = [sanitize_text(a['config']['name']).lower().replace(' ', '_') for a in agents[1:]]
+            other_agent_names = [
+                sanitize_text(a["config"]["name"]).lower().replace(" ", "_")
+                for a in agents[1:]
+            ]
             system_message += f" You are the primary coordinator who will receive suggestions or advice from all the other agents ({', '.join(other_agent_names)}). You must ensure that the final response integrates the suggestions from other agents or team members. YOUR FINAL RESPONSE MUST OFFER THE COMPLETE RESOLUTION TO THE USER'S REQUEST. When the user's request has been satisfied and all perspectives are integrated, you can respond with TERMINATE."
 
         agent_config = {
@@ -589,14 +657,14 @@ def get_workflow_from_agents(agents):
                             "base_url": None,
                             "api_type": None,
                             "api_version": None,
-                            "description": "OpenAI model configuration"
+                            "description": "OpenAI model configuration",
                         }
                     ],
                     "temperature": temperature_value,
                     "cache_seed": 42,
                     "timeout": 600,
                     "max_tokens": MODEL_TOKEN_LIMITS.get(st.session_state.model, 4096),
-                    "extra_body": None
+                    "extra_body": None,
                 },
                 "human_input_mode": "NEVER",
                 "max_consecutive_auto_reply": 8,
@@ -604,20 +672,22 @@ def get_workflow_from_agents(agents):
                 "is_termination_msg": None,
                 "code_execution_config": None,
                 "default_auto_reply": "",
-                "description": None
+                "description": None,
             },
             "timestamp": current_timestamp,
             "user_id": "default",
-            "skills": []  # Set skills to null only in the workflow JSON
+            "skills": [],  # Set skills to null only in the workflow JSON
         }
 
         workflow["receiver"]["groupchat_config"]["agents"].append(agent_config)
 
     crewai_agents = []
     for agent in agents:
-        if agent not in st.session_state.agents:  # Check if the agent exists in st.session_state.agents
+        if (
+            agent not in st.session_state.agents
+        ):  # Check if the agent exists in st.session_state.agents
             continue  # Skip the agent if it has been deleted
-        
+
         _, crewai_agent_data = create_agent_data(agent)
         crewai_agents.append(crewai_agent_data)
 
@@ -633,7 +703,9 @@ def handle_user_request(session_state):
     for retry in range(max_retries):
         try:
             print("Debug: Sending request to rephrase_prompt")
-            rephrased_text = rephrase_prompt(user_request, API_URL)  # Pass the API_URL to rephrase_prompt
+            rephrased_text = rephrase_prompt(
+                user_request, API_URL
+            )  # Pass the API_URL to rephrase_prompt
             print(f"Debug: Rephrased text: {rephrased_text}")
             if rephrased_text:
                 session_state.rephrased_request = rephrased_text
@@ -677,13 +749,17 @@ def handle_user_request(session_state):
         objectives_pattern = r"Objectives:\n(.*?)(?=Deliverables|$)"
         deliverables_pattern = r"Deliverables:\n(.*?)(?=Timeline|Team of Experts|$)"
 
-        objectives_match = re.search(objectives_pattern, project_manager_output, re.DOTALL)
+        objectives_match = re.search(
+            objectives_pattern, project_manager_output, re.DOTALL
+        )
         if objectives_match:
             objectives = objectives_match.group(1).strip().split("\n")
             for objective in objectives:
                 current_project.add_objective(objective.strip())
 
-        deliverables_match = re.search(deliverables_pattern, project_manager_output, re.DOTALL)
+        deliverables_match = re.search(
+            deliverables_pattern, project_manager_output, re.DOTALL
+        )
         if deliverables_match:
             deliverables = deliverables_match.group(1).strip().split("\n")
             for deliverable in deliverables:
@@ -703,7 +779,9 @@ def handle_user_request(session_state):
         team_of_experts_text = match.group(1).strip()
     else:
         print("Error: 'Team of Experts' section not found in Project Manager's output.")
-        st.warning("Failed to extract the team of experts from the Project Manager's output. Please try again.")
+        st.warning(
+            "Failed to extract the team of experts from the Project Manager's output. Please try again."
+        )
         return
 
     autogen_agents, crewai_agents = get_agents_from_text(team_of_experts_text, API_URL)
@@ -739,22 +817,22 @@ def load_skill_functions():
         if hasattr(skill_module, skill_name):
             skill_functions[skill_name] = getattr(skill_module, skill_name)
     st.session_state.skill_functions = skill_functions
-    
+
 
 def regenerate_json_files_and_zip():
     # Get the updated workflow data
     workflow_data, _ = get_workflow_from_agents(st.session_state.agents)
-    
+
     # Regenerate the zip files
     autogen_zip_buffer, crewai_zip_buffer = zip_files_in_memory(workflow_data)
-    
+
     # Update the zip buffers in the session state
     st.session_state.autogen_zip_buffer = autogen_zip_buffer
     st.session_state.crewai_zip_buffer = crewai_zip_buffer
 
 
 def rephrase_prompt(user_request, api_url):
-    temperature_value = st.session_state.get('temperature', 0.1)
+    temperature_value = st.session_state.get("temperature", 0.1)
     print("Executing rephrase_prompt()")
     print(f"Debug: api_url: {api_url}")
 
@@ -777,7 +855,9 @@ def rephrase_prompt(user_request, api_url):
     """
 
     model = st.session_state.model
-    max_tokens = MODEL_TOKEN_LIMITS.get(model, 4096)  # Use the appropriate max_tokens value based on the selected model
+    max_tokens = MODEL_TOKEN_LIMITS.get(
+        model, 4096
+    )  # Use the appropriate max_tokens value based on the selected model
 
     llm_request_data = {
         "model": model,
@@ -817,7 +897,9 @@ def rephrase_prompt(user_request, api_url):
                 rephrased = response_data["choices"][0]["message"]["content"]
                 return rephrased.strip()
             else:
-                print("Error: Unexpected response format. 'choices' field missing or empty.")
+                print(
+                    "Error: Unexpected response format. 'choices' field missing or empty."
+                )
                 return None
         else:
             print(f"Request failed. Status Code: {response.status_code}")
@@ -826,8 +908,8 @@ def rephrase_prompt(user_request, api_url):
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         return None
-    
-    
+
+
 def update_discussion_and_whiteboard(agent_name, response, user_input):
     if user_input:
         user_input_text = f"\n\n\n\n{user_input}\n\n"
@@ -838,7 +920,7 @@ def update_discussion_and_whiteboard(agent_name, response, user_input):
     st.session_state.whiteboard = code_blocks
     st.session_state.last_agent = agent_name
     st.session_state.last_comment = response_text
-    
+
 
 def zip_files_in_memory(workflow_data):
     autogen_zip_buffer = io.BytesIO()
@@ -846,12 +928,12 @@ def zip_files_in_memory(workflow_data):
 
     autogen_file_data = {}
     for agent in st.session_state.agents:
-        agent_name = agent['config']['name']
-        formatted_agent_name = sanitize_text(agent_name).lower().replace(' ', '_')
+        agent_name = agent["config"]["name"]
+        formatted_agent_name = sanitize_text(agent_name).lower().replace(" ", "_")
         agent_file_name = f"{formatted_agent_name}.json"
         autogen_agent_data, _ = create_agent_data(agent)
-        autogen_agent_data['config']['name'] = formatted_agent_name
-        agent_file_data = json.dumps(autogen_agent_data, indent=2).encode('utf-8')
+        autogen_agent_data["config"]["name"] = formatted_agent_name
+        agent_file_data = json.dumps(autogen_agent_data, indent=2).encode("utf-8")
         autogen_file_data[f"agents/{agent_file_name}"] = agent_file_data
 
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -862,23 +944,25 @@ def zip_files_in_memory(workflow_data):
             skill_name = os.path.splitext(skill_file)[0]
             if agent.get(skill_name, False):
                 skill_file_path = os.path.join(skill_folder, skill_file)
-                with open(skill_file_path, 'r') as file:
+                with open(skill_file_path, "r") as file:
                     skill_data = file.read()
-                skill_json = json.dumps(create_skill_data(skill_data), indent=2).encode('utf-8')
+                skill_json = json.dumps(create_skill_data(skill_data), indent=2).encode(
+                    "utf-8"
+                )
                 autogen_file_data[f"skills/{skill_name}.json"] = skill_json
 
     workflow_file_name = "workflow.json"
-    workflow_file_data = json.dumps(workflow_data, indent=2).encode('utf-8')
+    workflow_file_data = json.dumps(workflow_data, indent=2).encode("utf-8")
     autogen_file_data[workflow_file_name] = workflow_file_data
 
     crewai_file_data = {}
     for index, agent in enumerate(st.session_state.agents):
-        agent_name = agent['config']['name']
-        formatted_agent_name = sanitize_text(agent_name).lower().replace(' ', '_')
+        agent_name = agent["config"]["name"]
+        formatted_agent_name = sanitize_text(agent_name).lower().replace(" ", "_")
         crewai_agent_data = create_agent_data(agent)[1]
-        crewai_agent_data['name'] = formatted_agent_name
+        crewai_agent_data["name"] = formatted_agent_name
         agent_file_name = f"{formatted_agent_name}.json"
-        agent_file_data = json.dumps(crewai_agent_data, indent=2).encode('utf-8')
+        agent_file_data = json.dumps(crewai_agent_data, indent=2).encode("utf-8")
         crewai_file_data[f"agents/{agent_file_name}"] = agent_file_data
 
     create_zip_file(autogen_zip_buffer, autogen_file_data)

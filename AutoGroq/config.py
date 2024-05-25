@@ -1,5 +1,9 @@
-#APIs
-LLM_PROVIDER = "groq" # Supported values: "groq", "openai", "ollama", "lmstudio"
+import os
+
+
+# APIs
+# possible values: groq, lmstudio, openai, ollama
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "groq")
 
 
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -25,10 +29,10 @@ else:
     raise ValueError(f"Unsupported LLM provider: {LLM_PROVIDER}")
 
 API_KEY_NAMES = {
-    "groq": "GROQ_API_KEY",
+    "groq": os.environ.get("GROQ_API_KEY", "GROQ_API_KEY"),
     "lmstudio": None,
     "ollama": None,
-    "openai": "OPENAI_API_KEY",
+    "openai": os.environ.get("OPENAI_API_KEY", "OPEN_AI_API_KEY"),
     # Add other LLM providers and their respective API key names here
 }
 
@@ -41,26 +45,26 @@ LLM_URL = GROQ_API_URL
 # Model configurations
 if LLM_PROVIDER == "groq":
     MODEL_TOKEN_LIMITS = {
-        'mixtral-8x7b-32768': 32768,
-        'llama3-70b-8192': 8192,
-        'llama3-8b-8192': 8192,
-        'gemma-7b-it': 8192,
+        "mixtral-8x7b-32768": 32768,
+        "llama3-70b-8192": 8192,
+        "llama3-8b-8192": 8192,
+        "gemma-7b-it": 8192,
     }
 elif LLM_PROVIDER == "lmstudio":
     MODEL_TOKEN_LIMITS = {
-        'instructlab/granite-7b-lab-GGUF': 2048,
-    } 
+        "instructlab/granite-7b-lab-GGUF": 2048,
+    }
 elif LLM_PROVIDER == "openai":
     MODEL_TOKEN_LIMITS = {
-        'gpt-4o': 4096,
+        "gpt-4o": 4096,
     }
 elif LLM_PROVIDER == "ollama":
     MODEL_TOKEN_LIMITS = {
-        'llama3': 8192,
-    }   
+        "llama3": 8192,
+    }
 else:
     MODEL_TOKEN_LIMITS = {}
 
 
 # Database path
-AUTOGEN_DB_PATH = "C:\\Users\\j\\.autogenstudio\\database.sqlite"
+AUTOGEN_DB_PATH = os.environ.get("AUTOGEN_DB_PATH", "AutoGroq/autogen.db")

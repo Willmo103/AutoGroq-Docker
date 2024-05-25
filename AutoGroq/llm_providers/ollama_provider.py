@@ -1,12 +1,11 @@
-
 import json
 import requests
 from llm_providers.base_provider import BaseLLMProvider
 
+
 class OllamaProvider(BaseLLMProvider):
     def __init__(self, api_url):
         self.api_url = api_url
-
 
     def send_request(self, data):
         headers = {
@@ -29,22 +28,13 @@ class OllamaProvider(BaseLLMProvider):
         response = requests.post(self.api_url, data=json_data, headers=headers)
         return response
 
-
     def process_response(self, response):
         if response.status_code == 200:
             response_data = response.json()
             if "response" in response_data:
                 content = response_data["response"].strip()
                 if content:
-                    return {
-                        "choices": [
-                            {
-                                "message": {
-                                    "content": content
-                                }
-                            }
-                        ]
-                    }
+                    return {"choices": [{"message": {"content": content}}]}
                 else:
                     raise Exception("Empty response received from the Ollama API.")
             else:

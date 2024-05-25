@@ -27,4 +27,4 @@ class Current_Project:
 
     def mark_deliverable_undone(self, index):
         if 0 <= index < len(self.deliverables):
-            self.deliverables[index]["done"] = False            
+            self.deliverables[index]["done"] = False

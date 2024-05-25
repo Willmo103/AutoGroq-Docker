@@ -1,4 +1,3 @@
-
 import importlib
 import requests
 import streamlit as st
@@ -25,16 +24,20 @@ def make_api_request(url, data, headers, api_key):
             return response.json()
         elif response.status_code == 429:
             error_message = response.json().get("error", {}).get("message", "")
-            st.error(f"Rate limit reached for the current model. If you click 'Update' again, we'll retry with a reduced token count.  Or you can try selecting a different model.")
+            st.error(
+                f"Rate limit reached for the current model. If you click 'Update' again, we'll retry with a reduced token count.  Or you can try selecting a different model."
+            )
             st.error(f"Error details: {error_message}")
             return None
         else:
-            print(f"Error: API request failed with status {response.status_code}, response: {response.text}")
+            print(
+                f"Error: API request failed with status {response.status_code}, response: {response.text}"
+            )
             return None
     except requests.RequestException as e:
         print(f"Error: Request failed {e}")
         return None
-    
+
 
 def send_request_with_retry(url, data, headers, api_key):
     response = make_api_request(url, data, headers, api_key)
@@ -52,4 +55,4 @@ def send_request_with_retry(url, data, headers, api_key):
                 print(f"Retry successful. Response: {response}")
             else:
                 print("Retry failed.")
-    return response    
+    return response
